@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Smart Home BLE</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.3);
+            --success: #4ade80;
+            --success-glow: rgba(74, 222, 128, 0.4);
+            --danger: #f87171;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo-area {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            background-color: rgba(248, 113, 113, 0.1);
+            color: var(--danger);
+            margin-bottom: 30px;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(248, 113, 113, 0.2);
+        }
+
+        .status-badge.connected {
+            background-color: rgba(74, 222, 128, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-connect {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: white;
+        }
+
+        .btn-connect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px var(--primary-glow);
+        }
+
+        .btn-disconnect {
+            background-color: #334155;
+            color: var(--text-muted);
+            display: none;
+        }
+
+        .btn-disconnect:hover {
+            background-color: #475569;
+            color: white;
+        }
+
+        .control-grid {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .control-card {
+            background-color: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.4s ease;
+        }
+
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+
+        .switch-btn {
+            width: 80px;
+            height: 40px;
+            background-color: #334155;
+            border-radius: 9999px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .switch-btn::after {
+            content: '';
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: white;
+            top: 4px;
+            left: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* একটিভ বা অন স্টেটের স্টাইল */
+        .control-card.active-light {
+            border-color: rgba(253, 224, 71, 0.3);
+            background: radial-gradient(circle at top, rgba(253, 224, 71, 0.1), transparent);
+        }
+        .control-card.active-light .card-icon {
+            color: #fde047;
+            transform: scale(1.1);
+            text-shadow: 0 0 15px rgba(253, 224, 71, 0.6);
+        }
+
+        .control-card.active-fan {
+            border-color: rgba(56, 189, 248, 0.3);
+            background: radial-gradient(circle at top, rgba(56, 189, 248, 0.1), transparent);
+        }
+        .control-card.active-fan .card-icon {
+            color: var(--primary);
+            transform: scale(1.1);
+            animation: spin 3s linear infinite;
+        }
+
+        .control-card.active .switch-btn {
+            background-color: var(--success);
+            box-shadow: 0 0 15px var(--success-glow);
+        }
+
+        .control-card.active .switch-btn::after {
+            left: 44px;
+        }
+
+        @keyframes spin {
+            from { transform: scale(1.1) rotate(0deg); }
+            to { transform: scale(1.1) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="logo-area">🏠</div>
+    <h2>Prosenjit Smart Home</h2>
+    <div class="subtitle">Bluetooth Low Energy Controller</div>
+    
+    <div id="status" class="status-badge">Disconnected</div>
+    
+    <button id="connectBtn" class="action-btn btn-connect" onclick="connectBLE()">Scan & Connect</button>
+    <button id="disconnectBtn" class="action-btn btn-disconnect" onclick="disconnectBLE()">Disconnect Device</button>
+
+    <div id="controlPanel" class="control-grid">
+        <div id="lightCard" class="control-card">
+            <div class="card-icon">💡</div>
+            <div class="card-title">Smart Light</div>
+            <button id="lightSwitch" class="switch-btn" onclick="toggleDevice('light')"></button>
+        </div>
+
+        <div id="fanCard" class="control-card">
+            <div class="card-icon">🛸</div>
+            <div class="card-title">Smart Fan</div>
+            <button id="fanSwitch" class="switch-btn" onclick="toggleDevice('fan')"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SERVICE_UUID = "4fa85c00-1101-11e1-9ab4-0002a5d5c51b";
+    const CHARACTERISTIC_UUID = "bea5c001-1101-11e1-9ab4-0002a5d5c51b";
+
+    let bleDevice = null;
+    let bleCharacteristic = null;
+    
+    // ডিভাইসের বর্তমান অবস্থা ট্র্যাকিং
+    let isLightOn = false;
+    let isFanOn = false;
+
+    async function connectBLE() {
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerText = "Scanning...";
+
+        try {
+            bleDevice = await navigator.bluetooth.requestDevice({
+                filters: [{ name: 'Prosenjit Smart Home V2' }],
+                optionalServices: [SERVICE_UUID]
+            });
+
+            statusDiv.innerText = "Connecting...";
+            
+            const server = await bleDevice.gatt.connect();
+            const service = await server.getPrimaryService(SERVICE_UUID);
+            bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+            statusDiv.innerText = "Connected";
+            statusDiv.classList.add('connected');
+            document.getElementById('connectBtn').style.display = 'none';
+            document.getElementById('disconnectBtn').style.display = 'block';
+            document.getElementById('controlPanel').style.display = 'grid';
+
+            bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+        } catch (error) {
+            console.log(error);
+            statusDiv.innerText = "Connection Failed";
+        }
+    }
+
+    // টগল বাটন ফাংশন (একটি বাটনেই অন এবং অফ হবে)
+    async function toggleDevice(device) {
+        if (!bleCharacteristic) return;
+
+        if (device === 'light') {
+            isLightOn = !isLightOn;
+            const command = isLightOn ? 'A' : 'a';
+            await sendCommand(command);
+            
+            // UI অ্যানিমেশন আপডেট
+            const card = document.getElementById('lightCard');
+            if(isLightOn) {
+                card.classList.add('active', 'active-light');
+            } else {
+                card.classList.remove('active', 'active-light');
+            }
+        } 
+        else if (device === 'fan') {
+            isFanOn = !isFanOn;
+            const command = isFanOn ? 'B' : 'b';
+            await sendCommand(command);
+            
+            // UI অ্যানিমেশন আপডেট
+            const card = document.getElementById('fanCard');
+            if(isFanOn) {
+                card.classList.add('active', 'active-fan');
+            } else {
+                card.classList.remove('active', 'active-fan');
+            }
+        }
+    }
+
+    async function sendCommand(charCommand) {
+        try {
+            const encoder = new TextEncoder();
+            await bleCharacteristic.writeValue(encoder.encode(charCommand));
+        } catch (error) {
+            console.log("Error sending command: " + error);
+        }
+    }
+
+    function disconnectBLE() {
+        if (bleDevice && bleDevice.gatt.connected) {
+            bleDevice.gatt.disconnect();
+        }
+    }
+
+    function onDisconnected() {
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerText = "Disconnected";
+        statusDiv.classList.remove('connected');
+        document.getElementById('connectBtn').style.display = 'block';
+        document.getElementById('disconnectBtn').style.display = 'none';
+        document.getElementById('controlPanel').style.display = 'none';
+        
+        // সব স্টেট রিসেট
+        isLightOn = false;
+        isFanOn = false;
+        document.getElementById('lightCard').className = "control-card";
+        document.getElementById('fanCard').className = "control-card";
+    }
+</script>
+
+</body>
+</html>
